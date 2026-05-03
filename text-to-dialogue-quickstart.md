@@ -1,6 +1,7 @@
-> This is a page from the ElevenLabs documentation. For a complete page index, fetch https://elevenlabs.io/docs/llms.txt. For the full documentation in a single file, fetch https://elevenlabs.io/docs/llms-full.txt.
-
-# Text to Dialogue quickstart
+***
+title: Text to Dialogue quickstart
+subtitle: Learn how to generate immersive dialogue from text.
+-------------------------------------------------------------
 
 This guide will show you how to generate immersive, natural-sounding dialogue from text using the Text to Dialogue API.
 
@@ -113,11 +114,11 @@ This guide will show you how to generate immersive, natural-sounding dialogue fr
 ## Next steps
 
 <CardGroup cols={3}>
-  <Card title="Browse voices" icon="https://files.buildwithfern.com/https://elevenlabs.docs.buildwithfern.com/docs/6b834427deaf202a6c9126c08d7e9a128df0ab0d707882a1743d6fde9aeb5551/assets/icons/voices.svg" href="https://elevenlabs.io/app/voice-library">
+  <Card title="Browse voices" icon="file:8beaab1d-b666-4d4e-9f1c-23717bcf386e" href="https://elevenlabs.io/app/voice-library">
     Explore 10,000+ voices to assign to each dialogue speaker
   </Card>
 
-  <Card title="Text to Speech" icon="https://files.buildwithfern.com/https://elevenlabs.docs.buildwithfern.com/docs/696de2d6ea9525ec2924c8bdd14d9f2a1657df3fac57296ea1493ed880c3c471/assets/icons/tts.svg" href="/docs/eleven-api/guides/cookbooks/text-to-speech">
+  <Card title="Text to Speech" icon="file:229118b6-6f05-4376-94c3-7041287a4174" href="/docs/eleven-api/guides/cookbooks/text-to-speech">
     Generate speech from a single voice with the Text to Speech API
   </Card>
 
