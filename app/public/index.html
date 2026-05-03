@@ -5,68 +5,347 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Text to Dialogue Generator</title>
     <style>
-      body { font-family: Arial, sans-serif; margin: 2rem; max-width: 1000px; }
-      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-      textarea, input, select { width: 100%; padding: .5rem; }
-      button { padding: .6rem 1rem; margin-right: .5rem; }
-      table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-      th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
-      .muted { color: #666; font-size: .9rem; }
+      :root {
+        --primary: #6366f1;
+        --primary-hover: #4f46e5;
+        --bg: #0f172a;
+        --card-bg: #1e293b;
+        --text: #f8fafc;
+        --text-muted: #94a3b8;
+        --border: #334155;
+        --accent: #10b981;
+      }
+
+      body { 
+        font-family: 'Inter', -apple-system, sans-serif; 
+        margin: 0; 
+        background-color: var(--bg); 
+        color: var(--text);
+        line-height: 1.5;
+        padding: 2rem;
+        display: flex;
+        justify-content: center;
+      }
+
+      .container {
+        max-width: 1000px;
+        width: 100%;
+        background: var(--card-bg);
+        padding: 2.5rem;
+        border-radius: 1.5rem;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--border);
+      }
+
+      h1 { 
+        font-size: 2.5rem; 
+        font-weight: 800; 
+        margin-bottom: 0.5rem;
+        background: linear-gradient(to right, #818cf8, #c084fc);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .grid { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); 
+        gap: 1.5rem; 
+        margin-bottom: 2rem;
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 1.5rem;
+        border-radius: 1rem;
+        border: 1px solid var(--border);
+        transition: transform 0.2s, border-color 0.2s;
+      }
+
+      .card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+      }
+
+      label { 
+        display: block; 
+        font-weight: 600; 
+        margin-bottom: 0.5rem; 
+        color: var(--text-muted);
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      textarea, input, select { 
+        width: 100%; 
+        padding: 0.75rem; 
+        border-radius: 0.75rem; 
+        background: #0f172a; 
+        border: 1px solid var(--border); 
+        color: var(--text);
+        font-size: 1rem;
+        transition: ring 0.2s, border-color 0.2s;
+        box-sizing: border-box;
+      }
+
+      textarea:focus, input:focus, select:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+      }
+
+      button { 
+        padding: 0.75rem 1.5rem; 
+        border-radius: 0.75rem; 
+        border: none; 
+        background: var(--primary); 
+        color: white; 
+        font-weight: 600; 
+        cursor: pointer; 
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      button:hover { 
+        background: var(--primary-hover); 
+        transform: scale(1.02);
+      }
+
+      button:active {
+        transform: scale(0.98);
+      }
+
+      button#hardRefresh {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-muted);
+      }
+
+      button#hardRefresh:hover {
+        border-color: var(--text-muted);
+        color: var(--text);
+      }
+
+      button#pinVoice {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: #fbbf24;
+      }
+
+      button#pinVoice:hover {
+        background: rgba(251, 191, 36, 0.1);
+        border-color: #fbbf24;
+      }
+
+      table { 
+        width: 100%; 
+        border-collapse: separate; 
+        border-spacing: 0;
+        margin-top: 1.5rem; 
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        overflow: hidden;
+      }
+
+      th, td { 
+        padding: 1rem; 
+        text-align: left; 
+        border-bottom: 1px solid var(--border);
+      }
+
+      th { 
+        background: rgba(255, 255, 255, 0.05); 
+        font-weight: 600;
+        color: var(--text-muted);
+      }
+
+      tr:last-child td {
+        border-bottom: none;
+      }
+
+      .muted { color: var(--text-muted); font-size: 0.875rem; }
+      
+      #status {
+        margin-left: 1rem;
+        font-weight: 500;
+        color: var(--accent);
+      }
+
+      audio {
+        width: 100%;
+        margin-top: 2rem;
+        filter: invert(1) hue-rotate(180deg);
+      }
+
+      #speakerMap > div {
+        background: rgba(255, 255, 255, 0.02);
+        padding: 1rem;
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        border: 1px solid var(--border);
+      }
+
+      .btn-danger {
+        background: #ef4444;
+      }
+      .btn-danger:hover {
+        background: #dc2626;
+      }
+      .btn-sm {
+        padding: 0.4rem 0.8rem;
+        font-size: 0.75rem;
+      }
+      .editable-text {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid transparent;
+        padding: 0.4rem;
+        border-radius: 0.4rem;
+        width: 100%;
+        display: block;
+        color: inherit;
+        font-family: inherit;
+        font-size: inherit;
+      }
+      .editable-text:focus {
+        border-color: var(--primary);
+        outline: none;
+      }
     </style>
   </head>
   <body>
-    <h1>Text to Dialogue</h1>
-    <p class="muted">Upload a dialogue text file, map each speaker to a voice ID, then generate audio.</p>
+    <div class="container">
+      <h1>Text to Dialogue</h1>
+      <p class="muted">Upload a dialogue text file, map each speaker to a voice ID, then generate audio.</p>
 
-    <div class="grid">
-      <div>
-        <label for="dialogueFile">Dialogue file (.txt)</label>
-        <input id="dialogueFile" type="file" accept=".txt" />
+      <div class="grid">
+        <div class="card">
+          <label for="dialogueFile">Dialogue file (.txt)</label>
+          <input id="dialogueFile" type="file" accept=".txt" />
+        </div>
+
+        <div class="card">
+          <label for="modelDropdown">Generation Model</label>
+          <select id="modelDropdown">
+            <option value="eleven_flash_v2_5">Flash v2.5 ($0.05/1K)</option>
+            <option value="eleven_turbo_v2_5">Turbo v2.5 ($0.05/1K)</option>
+            <option value="eleven_multilingual_v2">Multilingual v2 ($0.10/1K)</option>
+            <option value="eleven_v3">Eleven V3 ($0.10/1K)</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <label for="fallbackVoice">Fallback voice ID (optional)</label>
-        <input id="fallbackVoice" placeholder="Used when a speaker has no mapping" />
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 2rem;">
+        <h3>Dialogue Editor</h3>
+        <button id="addRow" class="btn-sm" style="background: var(--accent);">+ Add Line</button>
       </div>
+
+      <div id="speakerMapSection" class="card" style="margin-top: 1rem; margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3 style="margin: 0;">Speaker Voices</h3>
+          <button id="addSpeaker" class="btn-sm">+ Add Speaker</button>
+        </div>
+        <div id="speakerMap"></div>
+      </div>
+      
+      <table>
+        <thead><tr><th>#</th><th>Speaker</th><th>Text</th><th>Actions</th></tr></thead>
+        <tbody id="linePreview"></tbody>
+      </table>
+
+      <p style="margin-top: 2rem; display: flex; align-items: center; gap: 1rem;">
+        <button id="generate">Generate dialogue</button>
+        <button id="saveAudio" style="background: var(--accent); display: none;">Save Audio</button>
+        <span id="status"></span>
+      </p>
+      <audio id="player" controls></audio>
     </div>
-
-    <h3>Detected speakers</h3>
-    <div id="speakerMap"></div>
-
-    <h3>Parsed lines (speaker label removed)</h3>
-    <table>
-      <thead><tr><th>#</th><th>Speaker</th><th>Text</th></tr></thead>
-      <tbody id="linePreview"></tbody>
-    </table>
-
-    <p>
-      <button id="generate">Generate dialogue</button>
-      <span id="status"></span>
-    </p>
-    <audio id="player" controls></audio>
 
     <script>
       const fileInput = document.getElementById('dialogueFile');
       const speakerMapEl = document.getElementById('speakerMap');
       const linePreviewEl = document.getElementById('linePreview');
-      const fallbackVoiceEl = document.getElementById('fallbackVoice');
+      const modelDropdownEl = document.getElementById('modelDropdown');
+      const saveAudioBtn = document.getElementById('saveAudio');
       const statusEl = document.getElementById('status');
+      const addRowBtn = document.getElementById('addRow');
+      const addSpeakerBtn = document.getElementById('addSpeaker');
+      
+      let allVoices = [];
+      let pinnedVoiceIds = [...new Set(JSON.parse(localStorage.getItem('pinnedVoices') || '[]'))];
+      let currentAudioBlob = null;
+
+      // Remember model
+      modelDropdownEl.value = localStorage.getItem('lastModel') || 'eleven_v3';
+      modelDropdownEl.addEventListener('change', () => {
+        localStorage.setItem('lastModel', modelDropdownEl.value);
+      });
+
+      function getVoiceOptionsHTML() {
+        const pinned = allVoices.filter(v => pinnedVoiceIds.includes(v.voice_id));
+        const others = allVoices.filter(v => !pinnedVoiceIds.includes(v.voice_id));
+        
+        let html = '<option value="">-- Select a voice --</option>';
+        if (pinned.length > 0) {
+          html += '<optgroup label="Pinned">';
+          pinned.forEach(v => {
+            html += `<option value="${v.voice_id}">⭐ ${v.name || v.voice_id}</option>`;
+          });
+          html += '</optgroup>';
+        }
+        
+        html += '<optgroup label="Other Voices">';
+        others.forEach(v => {
+          html += `<option value="${v.voice_id}">${v.name || v.voice_id}</option>`;
+        });
+        html += '</optgroup>';
+        return html;
+      }
+
+      function renderVoices() {
+        // Refresh speaker dropdowns if they exist
+        if (speakers.length > 0) {
+          renderSpeakerMap();
+        }
+        if (parsedLines.length > 0) {
+          renderPreview();
+        }
+      }
+
+      async function loadVoices() {
+        try {
+          const res = await fetch('/api/voices');
+          const data = await res.json();
+          if (!res.ok) return;
+          const seen = new Set();
+          allVoices = data.filter(v => {
+            if (seen.has(v.voice_id)) return false;
+            seen.add(v.voice_id);
+            return true;
+          }).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+          renderVoices();
+        } catch (e) { console.error(e); }
+      }
+
+      loadVoices();
       const player = document.getElementById('player');
 
       let parsedLines = [];
-      let speakers = [];
+      let speakers = ['Narrator'];
 
       const speakerRegex = /^\s*([^:]{1,80}):\s*(.*)$/;
 
       function parseDialogue(text) {
         const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
         const out = [];
-        const names = new Set();
+        const names = new Set(['Narrator']);
 
         lines.forEach((line, idx) => {
           const match = line.match(speakerRegex);
           if (!match) {
             out.push({ index: idx + 1, speaker: 'Narrator', text: line });
-            names.add('Narrator');
             return;
           }
           const speaker = match[1].trim();
@@ -81,28 +360,102 @@
 
       function renderSpeakerMap() {
         speakerMapEl.innerHTML = '';
+        const voiceOptions = getVoiceOptionsHTML();
+        
         speakers.forEach((speaker) => {
+          const savedVoiceId = localStorage.getItem(`speakerVoice_${speaker}`) || '';
+          
           const row = document.createElement('div');
           row.style.display = 'grid';
           row.style.gridTemplateColumns = '200px 1fr';
           row.style.gap = '.5rem';
           row.style.marginBottom = '.4rem';
-          row.innerHTML = `
-            <label>${speaker}</label>
-            <input data-speaker="${speaker}" placeholder="Voice ID for ${speaker}" />
-          `;
+          
+          const label = document.createElement('label');
+          label.textContent = speaker;
+          
+          const select = document.createElement('select');
+          select.setAttribute('data-speaker', speaker);
+          select.innerHTML = voiceOptions;
+          select.value = savedVoiceId;
+          
+          select.addEventListener('change', () => {
+            localStorage.setItem(`speakerVoice_${speaker}`, select.value);
+          });
+          
+          row.appendChild(label);
+          row.appendChild(select);
           speakerMapEl.appendChild(row);
         });
       }
+      
+      renderSpeakerMap();
 
       function renderPreview() {
         linePreviewEl.innerHTML = '';
+        const voiceOptions = getVoiceOptionsHTML();
+        
         parsedLines.forEach((line, i) => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td>${i + 1}</td><td>${line.speaker}</td><td>${line.text}</td>`;
+          
+          // Index
+          const tdIdx = document.createElement('td');
+          tdIdx.textContent = i + 1;
+          
+          // Speaker dropdown
+          const tdSpeaker = document.createElement('td');
+          const speakerSelect = document.createElement('select');
+          speakerSelect.innerHTML = '<option value="Narrator">Narrator</option>' + 
+            speakers.filter(s => s !== 'Narrator').map(s => `<option value="${s}">${s}</option>`).join('');
+          speakerSelect.value = line.speaker;
+          speakerSelect.addEventListener('change', () => {
+            line.speaker = speakerSelect.value;
+          });
+          tdSpeaker.appendChild(speakerSelect);
+          
+          // Text input
+          const tdText = document.createElement('td');
+          const textInput = document.createElement('textarea');
+          textInput.className = 'editable-text';
+          textInput.value = line.text;
+          textInput.rows = 1;
+          textInput.addEventListener('input', () => {
+            line.text = textInput.value;
+          });
+          tdText.appendChild(textInput);
+          
+          // Actions
+          const tdActions = document.createElement('td');
+          const delBtn = document.createElement('button');
+          delBtn.textContent = 'Delete';
+          delBtn.className = 'btn-sm btn-danger';
+          delBtn.addEventListener('click', () => {
+            parsedLines.splice(i, 1);
+            renderPreview();
+          });
+          tdActions.appendChild(delBtn);
+          
+          tr.appendChild(tdIdx);
+          tr.appendChild(tdSpeaker);
+          tr.appendChild(tdText);
+          tr.appendChild(tdActions);
           linePreviewEl.appendChild(tr);
         });
       }
+
+      addRowBtn.addEventListener('click', () => {
+        parsedLines.push({ index: parsedLines.length + 1, speaker: 'Narrator', text: '' });
+        renderPreview();
+      });
+
+      addSpeakerBtn.addEventListener('click', () => {
+        const name = prompt('Enter speaker name:');
+        if (name && !speakers.includes(name)) {
+          speakers.push(name);
+          renderSpeakerMap();
+          renderPreview();
+        }
+      });
 
       fileInput.addEventListener('change', async () => {
         const file = fileInput.files?.[0];
@@ -123,19 +476,18 @@
         }
 
         const voiceMap = {};
-        speakerMapEl.querySelectorAll('input[data-speaker]').forEach((el) => {
+        speakerMapEl.querySelectorAll('select[data-speaker]').forEach((el) => {
           voiceMap[el.dataset.speaker] = el.value.trim();
         });
-        const fallbackVoice = fallbackVoiceEl.value.trim();
 
         const inputs = parsedLines.map((line) => ({
           speaker: line.speaker,
           text: line.text,
-          voice_id: voiceMap[line.speaker] || fallbackVoice,
+          voice_id: voiceMap[line.speaker],
         }));
 
         if (inputs.some(x => !x.voice_id)) {
-          statusEl.textContent = 'Please map every speaker to a voice ID (or use fallback voice ID).';
+          statusEl.textContent = 'Please map every speaker to a voice ID.';
           return;
         }
 
@@ -146,10 +498,15 @@
         }
 
         statusEl.textContent = 'Generating...';
+        saveAudioBtn.style.display = 'none';
+
         const res = await fetch('/api/generate-dialogue', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ inputs })
+          body: JSON.stringify({ 
+            inputs,
+            model_id: modelDropdownEl.value
+          })
         });
 
         const data = await res.json();
@@ -158,9 +515,51 @@
           return;
         }
 
-        player.src = `data:${data.mimeType};base64,${data.audioBase64}`;
+        const audioData = atob(data.audioBase64);
+        const arrayBuffer = new ArrayBuffer(audioData.length);
+        const uint8Array = new Uint8Array(arrayBuffer);
+        for (let i = 0; i < audioData.length; i++) {
+          uint8Array[i] = audioData.charCodeAt(i);
+        }
+        currentAudioBlob = new Blob([uint8Array], { type: data.mimeType });
+        player.src = URL.createObjectURL(currentAudioBlob);
+        
         statusEl.textContent = 'Done.';
+        saveAudioBtn.style.display = 'inline-flex';
       });
+
+      async function saveAudio() {
+        if (!currentAudioBlob) return;
+        try {
+          if ('showSaveFilePicker' in window) {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: 'dialogue.mp3',
+              types: [{
+                description: 'Audio File',
+                accept: { 'audio/mpeg': ['.mp3'] },
+              }],
+            });
+            const writable = await handle.createWritable();
+            await writable.write(currentAudioBlob);
+            await writable.close();
+          } else {
+            // Fallback for browsers without File System Access API
+            const url = URL.createObjectURL(currentAudioBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'dialogue.mp3';
+            a.click();
+            URL.revokeObjectURL(url);
+          }
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            console.error('Failed to save file:', err);
+            alert('Failed to save file. Check console for details.');
+          }
+        }
+      }
+
+      saveAudioBtn.addEventListener('click', saveAudio);
     </script>
   </body>
 </html>
