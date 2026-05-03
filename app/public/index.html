@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Text to Dialogue Generator</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 2rem; max-width: 1000px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+      textarea, input, select { width: 100%; padding: .5rem; }
+      button { padding: .6rem 1rem; margin-right: .5rem; }
+      table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+      th, td { border: 1px solid #ddd; padding: .5rem; text-align: left; }
+      .muted { color: #666; font-size: .9rem; }
+    </style>
+  </head>
+  <body>
+    <h1>Text to Dialogue</h1>
+    <p class="muted">Upload a dialogue text file, map each speaker to a voice ID, then generate audio.</p>
+
+    <div class="grid">
+      <div>
+        <label for="dialogueFile">Dialogue file (.txt)</label>
+        <input id="dialogueFile" type="file" accept=".txt" />
+      </div>
+      <div>
+        <label for="fallbackVoice">Fallback voice ID (optional)</label>
+        <input id="fallbackVoice" placeholder="Used when a speaker has no mapping" />
+      </div>
+    </div>
+
+    <h3>Detected speakers</h3>
+    <div id="speakerMap"></div>
+
+    <h3>Parsed lines (speaker label removed)</h3>
+    <table>
+      <thead><tr><th>#</th><th>Speaker</th><th>Text</th></tr></thead>
+      <tbody id="linePreview"></tbody>
+    </table>
+
+    <p>
+      <button id="generate">Generate dialogue</button>
+      <span id="status"></span>
+    </p>
+    <audio id="player" controls></audio>
+
+    <script>
+      const fileInput = document.getElementById('dialogueFile');
+      const speakerMapEl = document.getElementById('speakerMap');
+      const linePreviewEl = document.getElementById('linePreview');
+      const fallbackVoiceEl = document.getElementById('fallbackVoice');
+      const statusEl = document.getElementById('status');
+      const player = document.getElementById('player');
+
+      let parsedLines = [];
+      let speakers = [];
+
+      const speakerRegex = /^\s*([^:]{1,80}):\s*(.*)$/;
+
+      function parseDialogue(text) {
+        const lines = text.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+        const out = [];
+        const names = new Set();
+
+        lines.forEach((line, idx) => {
+          const match = line.match(speakerRegex);
+          if (!match) {
+            out.push({ index: idx + 1, speaker: 'Narrator', text: line });
+            names.add('Narrator');
+            return;
+          }
+          const speaker = match[1].trim();
+          const stripped = match[2].trim();
+          if (!stripped) return;
+          out.push({ index: idx + 1, speaker, text: stripped });
+          names.add(speaker);
+        });
+
+        return { out, names: [...names] };
+      }
+
+      function renderSpeakerMap() {
+        speakerMapEl.innerHTML = '';
+        speakers.forEach((speaker) => {
+          const row = document.createElement('div');
+          row.style.display = 'grid';
+          row.style.gridTemplateColumns = '200px 1fr';
+          row.style.gap = '.5rem';
+          row.style.marginBottom = '.4rem';
+          row.innerHTML = `
+            <label>${speaker}</label>
+            <input data-speaker="${speaker}" placeholder="Voice ID for ${speaker}" />
+          `;
+          speakerMapEl.appendChild(row);
+        });
+      }
+
+      function renderPreview() {
+        linePreviewEl.innerHTML = '';
+        parsedLines.forEach((line, i) => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${i + 1}</td><td>${line.speaker}</td><td>${line.text}</td>`;
+          linePreviewEl.appendChild(tr);
+        });
+      }
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+        const content = await file.text();
+        const parsed = parseDialogue(content);
+        parsedLines = parsed.out;
+        speakers = parsed.names;
+        renderSpeakerMap();
+        renderPreview();
+        statusEl.textContent = `Loaded ${parsedLines.length} lines and ${speakers.length} speakers.`;
+      });
+
+      document.getElementById('generate').addEventListener('click', async () => {
+        if (!parsedLines.length) {
+          statusEl.textContent = 'Please upload a dialogue text file first.';
+          return;
+        }
+
+        const voiceMap = {};
+        speakerMapEl.querySelectorAll('input[data-speaker]').forEach((el) => {
+          voiceMap[el.dataset.speaker] = el.value.trim();
+        });
+        const fallbackVoice = fallbackVoiceEl.value.trim();
+
+        const inputs = parsedLines.map((line) => ({
+          speaker: line.speaker,
+          text: line.text,
+          voice_id: voiceMap[line.speaker] || fallbackVoice,
+        }));
+
+        if (inputs.some(x => !x.voice_id)) {
+          statusEl.textContent = 'Please map every speaker to a voice ID (or use fallback voice ID).';
+          return;
+        }
+
+        const total = inputs.reduce((sum, i) => sum + i.text.length, 0);
+        if (total > 2000) {
+          statusEl.textContent = 'Error: Total text exceeds 2,000 characters. Split file and retry.';
+          return;
+        }
+
+        statusEl.textContent = 'Generating...';
+        const res = await fetch('/api/generate-dialogue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inputs })
+        });
+
+        const data = await res.json();
+        if (!res.ok) {
+          statusEl.textContent = `Error: ${data.error || 'Unknown error'}`;
+          return;
+        }
+
+        player.src = `data:${data.mimeType};base64,${data.audioBase64}`;
+        statusEl.textContent = 'Done.';
+      });
+    </script>
+  </body>
+</html>

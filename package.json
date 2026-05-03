@@ -1,0 +1,20 @@
+{
+  "name": "text-to-dialogue-webapp",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx app/server.ts",
+    "start": "node --enable-source-maps app/server.ts"
+  },
+  "dependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.18.0",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.23",
+    "tsx": "^4.20.3",
+    "typescript": "^5.8.3"
+  }
+}
