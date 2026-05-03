@@ -208,6 +208,9 @@
         color: inherit;
         font-family: inherit;
         font-size: inherit;
+        resize: none;
+        overflow: hidden;
+        min-height: 2.5rem;
       }
       .editable-text:focus {
         border-color: var(--primary);
@@ -413,15 +416,24 @@
           });
           tdSpeaker.appendChild(speakerSelect);
           
-          // Text input
           const tdText = document.createElement('td');
           const textInput = document.createElement('textarea');
           textInput.className = 'editable-text';
           textInput.value = line.text;
-          textInput.rows = 1;
+          
+          const autoResize = () => {
+            textInput.style.height = 'auto';
+            textInput.style.height = textInput.scrollHeight + 'px';
+          };
+          
           textInput.addEventListener('input', () => {
             line.text = textInput.value;
+            autoResize();
           });
+          
+          // Initial resize after it's added to DOM
+          setTimeout(autoResize, 0);
+          
           tdText.appendChild(textInput);
           
           // Actions

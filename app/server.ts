@@ -88,7 +88,7 @@ app.post("/api/generate-dialogue", async (req, res) => {
     const client = new ElevenLabsClient({ apiKey: process.env.ELEVENLABS_API_KEY });
     const audio = await client.textToDialogue.convert({ 
       inputs: cleanedInputs,
-      model_id: modelId
+      modelId: modelId
     });
 
     const chunks: Buffer[] = [];
