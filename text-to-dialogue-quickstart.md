@@ -1,9 +1,4 @@
-***
-title: Text to Dialogue quickstart
-subtitle: Learn how to generate immersive dialogue from text.
--------------------------------------------------------------
-
-This guide will show you how to generate immersive, natural-sounding dialogue from text using the Text to Dialogue API.
+> This guide will show you how to generate immersive, natural-sounding dialogue from text using the Text to Dialogue API.
 
 <Warning>
   Keep the total length of all `inputs[].text` values at or below 2,000 characters per request for
